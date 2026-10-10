@@ -685,6 +685,13 @@ export const Devs = /* #__PURE__*/ Object.freeze({
     f3tch: {
         name: "f3tch",
         id: 1016388460929626174n
+    },
+    // Fork-local entry used by the VoiceTranscriber plugin.
+    // Replace the name and ID with your own, or keep `id: 0n` + `badge: false` to stay anonymous.
+    localAuthor: {
+        name: "you",
+        id: 0n,
+        badge: false
     }
 } satisfies Record<string, Dev>);
 

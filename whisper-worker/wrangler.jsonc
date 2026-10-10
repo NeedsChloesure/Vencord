@@ -1,0 +1,17 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "vencord-whisper",
+    "main": "src/index.ts",
+    "compatibility_date": "2026-10-01",
+    "observability": {
+        "enabled": true
+    },
+    "ai": {
+        "binding": "AI"
+    }
+    // The Worker reads three optional environment values:
+    //   AUTH_TOKEN       shared secret required from clients (set with `wrangler secret put AUTH_TOKEN`)
+    //   ALLOWED_HOSTS    comma separated allowlist of hosts the Worker may download audio from
+    //   MAX_AUDIO_BYTES  maximum accepted audio size in bytes
+    // Set the non-secret ones here as `"vars": { "MAX_AUDIO_BYTES": "26214400" }`
+}

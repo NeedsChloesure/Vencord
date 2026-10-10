@@ -1,0 +1,13 @@
+# Copy to .dev.vars for local `wrangler dev` testing. Real deployments should use
+# `wrangler secret put AUTH_TOKEN` for the token.
+
+# Shared secret the plugin must send (Authorization: Bearer <token>).
+# Leave unset to disable authentication (not recommended for a public deployment).
+AUTH_TOKEN=change-me
+
+# Optional: comma separated allowlist of hosts the Worker may download audio from.
+# Defaults to the Discord CDNs: cdn.discordapp.com,media.discordapp.net,discord.com,discordapp.com
+# ALLOWED_HOSTS=cdn.discordapp.com,media.discordapp.net
+
+# Optional: maximum accepted audio size in bytes. Defaults to 25165824 (24 MiB).
+# MAX_AUDIO_BYTES=25165824
