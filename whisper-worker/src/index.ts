@@ -6,17 +6,22 @@
  *
  * Model: @cf/openai/whisper-large-v3-turbo ("Whisper Large")
  *
- * Request:
- *   POST /  (or any path)
- *     Authorization: Bearer <AUTH_TOKEN>   (only required when AUTH_TOKEN is set)
+ * Routes (all require `Authorization: Bearer <AUTH_TOKEN>` when AUTH_TOKEN is set):
+ *
+ *   POST /            (or any path other than /translate) - transcribe audio
  *     Content-Type: application/json
  *     { "url": "https://cdn.discordapp.com/attachments/...", "language"?: "en", "task"?: "transcribe" | "translate" }
  *
- *   or POST the raw audio bytes with any other Content-Type ("audio/ogg", ...).
- *   Optional "language" / "task" query parameters work for both forms.
+ *     or POST the raw audio bytes with any other Content-Type ("audio/ogg", ...).
+ *     Optional "language" / "task" query parameters work for both forms.
+ *     Response: { "text": "...", "vtt"?: "...", "wordCount"?: number }
  *
- * Response: { "text": "...", "vtt"?: "...", "wordCount"?: number }
- * Errors:   { "error": "..." } with a non-2xx status.
+ *   POST /translate    - translate text with Kagi
+ *     Content-Type: application/json
+ *     { "text": "hola", "from"?: "auto", "to"?: "en" }
+ *     Response: { "translation": "...", "detectedLanguage"?: "Spanish" }
+ *
+ * Errors: { "error": "..." } with a non-2xx status.
  */
 
 const MODEL = "@cf/openai/whisper-large-v3-turbo";
@@ -30,6 +35,9 @@ const DEFAULT_ALLOWED_HOSTS = [
 ];
 
 const DEFAULT_MAX_AUDIO_BYTES = 24 * 1024 * 1024;
+
+const KAGI_ENDPOINT = "https://translate.kagi.com/api/translate";
+const MAX_TRANSLATE_CHARS = 10000;
 
 interface WhisperResult {
     text?: string;
@@ -53,6 +61,14 @@ interface Env {
     ALLOWED_HOSTS?: string;
     /** Maximum accepted audio size, in bytes. */
     MAX_AUDIO_BYTES?: string;
+    /** Kagi account session token (`kagi_session` cookie) used by POST /translate. */
+    KAGI_SESSION?: string;
+}
+
+interface TranslateBody {
+    text?: unknown;
+    from?: unknown;
+    to?: unknown;
 }
 
 interface TranscribeOptions {
@@ -121,6 +137,62 @@ function isAllowedHost(hostname: string, env: Env): boolean {
     });
 }
 
+/**
+ * Proxies a Kagi Translate request. The Kagi session token is a credential, so it lives
+ * in the Worker as a secret and is never sent to (or accepted from) the client.
+ */
+async function handleTranslate(request: Request, env: Env): Promise<Response> {
+    if (!env.KAGI_SESSION) {
+        return json({ error: "This Worker has no KAGI_SESSION secret configured." }, 501);
+    }
+
+    const body = await request.json().catch(() => null) as TranslateBody | null;
+    const text = typeof body?.text === "string" ? body.text : undefined;
+
+    if (!text) return json({ error: "Missing \"text\" in the JSON body." }, 400);
+    if (text.length > MAX_TRANSLATE_CHARS) {
+        return json({ error: `Text is too long (${text.length} characters, the limit is ${MAX_TRANSLATE_CHARS}).` }, 413);
+    }
+
+    const from = typeof body?.from === "string" && body.from ? body.from : "auto";
+    const to = typeof body?.to === "string" && body.to ? body.to : "en";
+
+    let upstream: Response;
+    try {
+        upstream = await fetch(KAGI_ENDPOINT, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Cookie: `kagi_session=${env.KAGI_SESSION}`
+            },
+            body: JSON.stringify({ text, from, to, model: "standard" })
+        });
+    } catch (error) {
+        return json({ error: `Failed to reach Kagi: ${errorMessage(error)}` }, 502);
+    }
+
+    if (!upstream.ok) {
+        const detail = (await upstream.text().catch(() => "")).slice(0, 200).trim();
+        return json({
+            error: upstream.status === 401
+                ? "Kagi rejected the Worker's KAGI_SESSION token (HTTP 401). Refresh the secret with a current session token."
+                : `Kagi responded with HTTP ${upstream.status}.${detail ? ` ${detail}` : ""}`
+        }, upstream.status === 401 ? 401 : 502);
+    }
+
+    const data = await upstream.json().catch(() => null) as {
+        translation?: string;
+        detected_language?: { label?: string; };
+    } | null;
+
+    if (!data?.translation) return json({ error: "Kagi returned no translation." }, 502);
+
+    return json({
+        translation: data.translation,
+        detectedLanguage: data.detected_language?.label
+    });
+}
+
 async function transcribe(audio: Uint8Array, options: TranscribeOptions, env: Env): Promise<Response> {
     const maxBytes = Number(env.MAX_AUDIO_BYTES) || DEFAULT_MAX_AUDIO_BYTES;
 
@@ -157,7 +229,10 @@ export default {
             return json({
                 ok: true,
                 model: MODEL,
-                usage: "POST raw audio bytes, or JSON { \"url\": \"https://cdn.discordapp.com/...\" }"
+                routes: {
+                    "POST /": "transcribe audio: raw bytes, or JSON { \"url\": \"https://cdn.discordapp.com/...\" }",
+                    "POST /translate": "translate text with Kagi: JSON { \"text\": \"...\", \"from\": \"auto\", \"to\": \"en\" }"
+                }
             });
         }
 
@@ -169,13 +244,17 @@ export default {
             return json({ error: "Unauthorized." }, 401);
         }
 
-        const { searchParams } = new URL(request.url);
+        const { pathname, searchParams } = new URL(request.url);
         const queryOptions: TranscribeOptions = {
             language: searchParams.get("language") ?? undefined,
             task: searchParams.get("task") ?? undefined
         };
 
         try {
+            if (pathname === "/translate" || pathname === "/translate/") {
+                return await handleTranslate(request, env);
+            }
+
             const contentType = request.headers.get("content-type") ?? "";
 
             if (contentType.includes("application/json")) {

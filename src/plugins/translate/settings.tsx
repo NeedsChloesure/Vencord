@@ -49,13 +49,15 @@ export const settings = definePluginSettings({
     },
     service: {
         type: OptionType.SELECT,
-        description: IS_WEB ? "Translation provider (not available on web)" : "Translation provider",
-        hidden: IS_WEB,
+        description: "Translation provider",
         options: [
             { label: "Google Translate", value: "google", default: true },
-            { label: "DeepL Free — API key required", value: "deepl" },
-            { label: "DeepL Pro — API key required", value: "deepl-pro" },
-            { label: "Kagi Translate — API key required", value: "kagi" }
+            { label: "Kagi Translate — via your own Worker", value: "kagi-worker" },
+            // These two talk to their APIs directly from the desktop app's main process,
+            // which the web/browser build has no equivalent of.
+            { label: IS_WEB ? "DeepL Free — desktop app only" : "DeepL Free — API key required", value: "deepl" },
+            { label: IS_WEB ? "DeepL Pro — desktop app only" : "DeepL Pro — API key required", value: "deepl-pro" },
+            { label: IS_WEB ? "Kagi Translate — desktop app only" : "Kagi Translate — session token required", value: "kagi" }
         ] as const,
         onChange: resetLanguageDefaults
     },
@@ -68,6 +70,19 @@ export const settings = definePluginSettings({
     kagiSession: {
         type: OptionType.STRING,
         description: "Your Kagi session token (from kagi.com/settings?p=user_details)",
+        default: ""
+    },
+    kagiWorkerUrl: {
+        type: OptionType.STRING,
+        displayName: "Kagi Worker URL",
+        description: "URL of your deployed whisper-worker. It keeps your Kagi session token and proxies translation requests, so the token never reaches the client.",
+        default: "",
+        placeholder: "https://vencord-whisper.<your-subdomain>.workers.dev"
+    },
+    kagiWorkerToken: {
+        type: OptionType.STRING,
+        displayName: "Kagi Worker Token",
+        description: "The Worker's AUTH_TOKEN secret. Leave empty if your Worker has no token configured.",
         default: ""
     },
     autoTranslate: {
@@ -94,13 +109,19 @@ export const settings = definePluginSettings({
     },
     kagiSession: {
         hidden() { return this.store.service !== "kagi"; }
+    },
+    kagiWorkerUrl: {
+        hidden() { return this.store.service !== "kagi-worker"; }
+    },
+    kagiWorkerToken: {
+        hidden() { return this.store.service !== "kagi-worker"; }
     }
 }).withPrivateSettings<{
     dismissedAutoTranslateAlert?: boolean;
 }>();
 
 export function resetLanguageDefaults() {
-    if (IS_WEB || settings.store.service === "google" || settings.store.service === "kagi") {
+    if (IS_WEB || settings.store.service === "google" || settings.store.service === "kagi" || settings.store.service === "kagi-worker") {
         settings.store.receivedInput = "auto";
         settings.store.receivedOutput = "en";
         settings.store.sentInput = "auto";

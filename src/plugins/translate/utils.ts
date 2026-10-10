@@ -53,9 +53,14 @@ export interface TranslationValue {
 }
 
 export const getLanguages = () => {
+    if (settings.store.service === "kagi-worker") {
+        return KagiLanguages;
+    }
+
     if (IS_WEB) {
         return GoogleLanguages;
     }
+
     switch (settings.store.service) {
         case "google":
             return GoogleLanguages;
@@ -66,17 +71,32 @@ export const getLanguages = () => {
     }
 };
 
+/**
+ * DeepL and the direct Kagi integration make their requests from the desktop app's main process,
+ * which the web/browser build has no equivalent of.
+ */
+function unavailableOnWeb(): Promise<TranslationValue> {
+    throw "This provider only works in the desktop app. Use Google Translate or \"Kagi Translate — via your own Worker\" instead.";
+}
+
+function getTranslateProvider() {
+    switch (settings.store.service) {
+        case "kagi-worker":
+            return kagiWorkerTranslate;
+        case "kagi":
+            return IS_WEB ? unavailableOnWeb : kagiTranslate;
+        case "google":
+            return googleTranslate;
+        case "deepl":
+        case "deepl-pro":
+            return IS_WEB ? unavailableOnWeb : deeplTranslate;
+        default:
+            return IS_WEB ? googleTranslate : deeplTranslate;
+    }
+}
+
 export async function translate(kind: "received" | "sent", text: string): Promise<TranslationValue> {
-    const translate = IS_WEB ? googleTranslate : (() => {
-        switch (settings.store.service) {
-            case "google":
-                return googleTranslate;
-            case "kagi":
-                return kagiTranslate;
-            default:
-                return deeplTranslate;
-        }
-    })();
+    const translate = getTranslateProvider();
 
     try {
         return await translate(
@@ -197,5 +217,43 @@ async function kagiTranslate(text: string, sourceLang: string, targetLang: strin
     return {
         sourceLanguage: detected_language.label,
         text: translation
+    };
+}
+
+/**
+ * Kagi translation proxied through the user's own Cloudflare Worker, which is what makes Kagi
+ * usable from the browser build (no main process / pluginHelpers there). The Kagi session token
+ * lives in the Worker as a secret and never touches the client.
+ */
+async function kagiWorkerTranslate(text: string, sourceLang: string, targetLang: string): Promise<TranslationValue> {
+    const workerUrl = settings.store.kagiWorkerUrl.trim().replace(/\/+$/, "");
+    if (!workerUrl) {
+        throw "Set the Kagi Worker URL in the Translate plugin settings first (deploy whisper-worker and run: wrangler secret put KAGI_SESSION)";
+    }
+
+    const res = await fetch(`${workerUrl}/translate`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...(settings.store.kagiWorkerToken ? { Authorization: `Bearer ${settings.store.kagiWorkerToken}` } : {})
+        },
+        body: JSON.stringify({ text, from: sourceLang, to: targetLang })
+    });
+
+    const data = await res.json().catch(() => null) as {
+        translation?: string;
+        detectedLanguage?: string;
+        error?: string;
+    } | null;
+
+    if (!res.ok)
+        throw data?.error ?? `Kagi Worker responded with HTTP ${res.status}`;
+
+    if (!data?.translation)
+        throw "Kagi returned an empty translation";
+
+    return {
+        sourceLanguage: data.detectedLanguage ?? sourceLang,
+        text: data.translation
     };
 }

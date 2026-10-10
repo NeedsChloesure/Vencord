@@ -4,7 +4,13 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { ConnectSrc, CspPolicies } from "@main/csp";
 import { IpcMainInvokeEvent } from "electron";
+
+// The "Kagi Translate — via your own Worker" provider fetches a Cloudflare Worker, which normally
+// lives on *.workers.dev. Discord's Content-Security-Policy does not allow that by default.
+// A Worker on a custom domain additionally needs that host under Custom CSP Rules in Vencord settings.
+CspPolicies["*.workers.dev"] = ConnectSrc;
 
 export async function makeDeeplTranslateRequest(_: IpcMainInvokeEvent, pro: boolean, apiKey: string, payload: string) {
     const url = pro

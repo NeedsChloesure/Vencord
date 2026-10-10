@@ -26,7 +26,7 @@ import { ChannelStore, Menu } from "@webpack/common";
 
 import { settings } from "./settings";
 import { setShouldShowTranslateEnabledTooltip, TranslateChatBarIcon, TranslateIcon } from "./TranslateIcon";
-import { handleTranslate, TranslationAccessory } from "./TranslationAccessory";
+import { handleTranslate, handleTranslateError, handleTranslateStart, TranslationAccessory } from "./TranslationAccessory";
 import { translate } from "./utils";
 
 const messageCtxPatch: NavContextMenuPatchCallback = (children, { message }: { message: Message; }) => {
@@ -42,14 +42,22 @@ const messageCtxPatch: NavContextMenuPatchCallback = (children, { message }: { m
             label="Translate"
             icon={TranslateIcon}
             leadingAccessory={{ type: "icon", icon: TranslateIcon }}
-            action={async () => {
-                const trans = await translate("received", content);
-                handleTranslate(message.id, trans);
-            }}
+            action={() => void translateMessage(message, content)}
         />
     ));
 };
 
+
+async function translateMessage(message: Message, content: string) {
+    handleTranslateStart(message.id);
+
+    try {
+        handleTranslate(message.id, await translate("received", content));
+    } catch {
+        // translate() already showed the failure in a toast, so just drop the subtext
+        handleTranslateError(message.id);
+    }
+}
 
 function getMessageContent(message: Message) {
     // Message snapshots is an array, which allows for nested snapshots, which Discord does not do yet.
@@ -92,10 +100,7 @@ export default definePlugin({
                 icon: TranslateIcon,
                 message,
                 channel: ChannelStore.getChannel(message.channel_id),
-                onClick: async () => {
-                    const trans = await translate("received", content);
-                    handleTranslate(message.id, trans);
-                }
+                onClick: () => void translateMessage(message, content)
             };
         }
     },

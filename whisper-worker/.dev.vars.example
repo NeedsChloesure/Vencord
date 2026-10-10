@@ -1,9 +1,13 @@
 # Copy to .dev.vars for local `wrangler dev` testing. Real deployments should use
-# `wrangler secret put AUTH_TOKEN` for the token.
+# `wrangler secret put <NAME>` for the credentials.
 
-# Shared secret the plugin must send (Authorization: Bearer <token>).
+# Shared secret the client must send (Authorization: Bearer <token>).
 # Leave unset to disable authentication (not recommended for a public deployment).
 AUTH_TOKEN=change-me
+
+# Kagi account session token, used by POST /translate. Grab the `kagi_session` cookie value
+# from translate.kagi.com while signed in. Treat it like a password: it is never sent to clients.
+# KAGI_SESSION=
 
 # Optional: comma separated allowlist of hosts the Worker may download audio from.
 # Defaults to the Discord CDNs: cdn.discordapp.com,media.discordapp.net,discord.com,discordapp.com

@@ -22,19 +22,37 @@ import { Parser, useEffect, useState } from "@webpack/common";
 import { TranslateIcon } from "./TranslateIcon";
 import { cl, TranslationValue } from "./utils";
 
+type TranslationState =
+    | { status: "loading"; }
+    | { status: "done"; translation: TranslationValue; };
+
 interface TranslationSetter {
     messageId: string;
-    handleTranslation(v: TranslationValue): void;
+    setState(state?: TranslationState): void;
 }
 
 const TranslationSetters = new Set<TranslationSetter>();
 
-export function handleTranslate(messageId: string, data: TranslationValue) {
+function updateTranslationState(messageId: string, state?: TranslationState) {
     for (const setter of TranslationSetters) {
         if (setter.messageId === messageId) {
-            setter.handleTranslation(data);
+            setter.setState(state);
         }
     }
+}
+
+/** Show the "Translating..." subtext while the request is in flight. */
+export function handleTranslateStart(messageId: string) {
+    updateTranslationState(messageId, { status: "loading" });
+}
+
+export function handleTranslate(messageId: string, data: TranslationValue) {
+    updateTranslationState(messageId, { status: "done", translation: data });
+}
+
+/** The request failed and translate() already showed a toast, so just drop the subtext. */
+export function handleTranslateError(messageId: string) {
+    updateTranslationState(messageId);
 }
 
 function Dismiss({ onDismiss }: { onDismiss: () => void; }) {
@@ -49,7 +67,7 @@ function Dismiss({ onDismiss }: { onDismiss: () => void; }) {
 }
 
 export function TranslationAccessory({ message }: { message: Message; }) {
-    const [translation, setTranslation] = useState<TranslationValue>();
+    const [state, setState] = useState<TranslationState>();
 
     useEffect(() => {
         // Ignore MessageLinkEmbeds messages
@@ -57,21 +75,32 @@ export function TranslationAccessory({ message }: { message: Message; }) {
 
         const setter: TranslationSetter = {
             messageId: message.id,
-            handleTranslation: setTranslation
+            setState
         };
 
         TranslationSetters.add(setter);
         return () => void TranslationSetters.delete(setter);
     }, []);
 
-    if (!translation) return null;
+    if (!state) return null;
+
+    if (state.status === "loading") {
+        return (
+            <span className={cl("accessory")}>
+                <TranslateIcon width={16} height={16} className={cl("accessory-icon")} />
+                Translating...
+            </span>
+        );
+    }
+
+    const { text, sourceLanguage } = state.translation;
 
     return (
         <span className={cl("accessory")}>
             <TranslateIcon width={16} height={16} className={cl("accessory-icon")} />
-            {Parser.parse(translation.text)}
+            {Parser.parse(text)}
             <br />
-            (translated from {translation.sourceLanguage} - <Dismiss onDismiss={() => setTranslation(undefined)} />)
+            (translated from {sourceLanguage} - <Dismiss onDismiss={() => setState(undefined)} />)
         </span>
     );
 }
