@@ -8,6 +8,11 @@
     },
     "ai": {
         "binding": "AI"
+    },
+    "secrets": {
+        "required": [
+            "KAGI_SESSION"
+        ]
     }
     // The Worker reads four optional environment values:
     //   AUTH_TOKEN       shared secret required from clients (set with `wrangler secret put AUTH_TOKEN`)
