@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { clear, createStore, entries, get, set } from "@api/DataStore";
+import { clear, createStore, entries, set } from "@api/DataStore";
 
 const store = createStore("VencordPronounsCache", "pronouns");
 

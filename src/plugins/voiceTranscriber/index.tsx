@@ -15,7 +15,7 @@ import { copyWithToast } from "@utils/discord";
 import definePlugin, { OptionType } from "@utils/types";
 import { Message, MessageAttachment } from "@vencord/discord-types";
 import { MessageFlags } from "@vencord/discord-types/enums";
-import { ChannelStore, Menu, showToast, useEffect, useState } from "@webpack/common";
+import { Menu, showToast, useEffect, useState } from "@webpack/common";
 
 export const cl = classNameFactory("vc-voice-transcriber-");
 
@@ -104,7 +104,7 @@ function getAudioAttachment(message: Message, includeRegularAudio: boolean) {
 async function transcribe(messageId: string, attachment: MessageAttachment) {
     const workerUrl = settings.store.workerUrl.trim().replace(/\/+$/, "");
     if (!workerUrl) {
-        showToast("Set your Cloudflare Worker URL in the VoiceTranscriber plugin settings first.", "failure");
+        showToast({ text: "Set your Cloudflare Worker URL in the VoiceTranscriber plugin settings first.", variant: "critical" });
         updateTranscript(messageId, {
             status: "error",
             error: "No Cloudflare Worker URL configured."
@@ -250,8 +250,6 @@ export default definePlugin({
             return {
                 label: transcripts.has(message.id) ? "Transcribe Again" : "Transcribe",
                 icon: Microphone,
-                message,
-                channel: ChannelStore.getChannel(message.channel_id),
                 onClick: () => void transcribe(message.id, attachment)
             };
         }

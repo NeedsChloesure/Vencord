@@ -20,6 +20,7 @@ import { definePluginSettings } from "@api/Settings";
 import { Button } from "@components/Button";
 import { OptionType } from "@utils/types";
 import { useState } from "@webpack/common";
+
 import { clearPronounsCache } from "./pronounsCache";
 
 function ClearCacheButton() {
