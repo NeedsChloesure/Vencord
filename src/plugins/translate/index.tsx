@@ -22,7 +22,7 @@ import { findGroupChildrenByChildId, NavContextMenuPatchCallback } from "@api/Co
 import { Devs } from "@utils/constants";
 import definePlugin from "@utils/types";
 import { Message } from "@vencord/discord-types";
-import { ChannelStore, Menu } from "@webpack/common";
+import { Menu } from "@webpack/common";
 
 import { settings } from "./settings";
 import { setShouldShowTranslateEnabledTooltip, TranslateChatBarIcon, TranslateIcon } from "./TranslateIcon";
@@ -98,8 +98,6 @@ export default definePlugin({
             return {
                 label: "Translate",
                 icon: TranslateIcon,
-                message,
-                channel: ChannelStore.getChannel(message.channel_id),
                 onClick: () => void translateMessage(message, content)
             };
         }
