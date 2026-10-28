@@ -19,7 +19,7 @@
  *   POST /translate    - translate text with Kagi
  *     Content-Type: application/json
  *     { "text": "hola", "from"?: "auto", "to"?: "en" }
- *     Response: { "translation": "...", "detectedLanguage"?: "Spanish" }
+ *     Response: { "translation": "...", "detectedLanguage"?: "Spanish", "detectedLanguageCode"?: "es" }
  *
  * Errors: { "error": "..." } with a non-2xx status.
  */
@@ -182,14 +182,15 @@ async function handleTranslate(request: Request, env: Env): Promise<Response> {
 
     const data = await upstream.json().catch(() => null) as {
         translation?: string;
-        detected_language?: { label?: string; };
+        detected_language?: { label?: string; iso?: string; };
     } | null;
 
     if (!data?.translation) return json({ error: "Kagi returned no translation." }, 502);
 
     return json({
         translation: data.translation,
-        detectedLanguage: data.detected_language?.label
+        detectedLanguage: data.detected_language?.label,
+        detectedLanguageCode: data.detected_language?.iso
     });
 }
 

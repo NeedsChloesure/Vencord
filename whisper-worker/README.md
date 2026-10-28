@@ -73,7 +73,7 @@ Responses:
 ```jsonc
 // 200
 { "text": "hello world", "vtt": "WEBVTT ...", "wordCount": 2 }
-{ "translation": "hello", "detectedLanguage": "Spanish" }
+{ "translation": "hello", "detectedLanguage": "Spanish", "detectedLanguageCode": "es" }
 
 // non-2xx
 { "error": "Failed to download the audio (HTTP 404)." }

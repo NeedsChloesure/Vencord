@@ -17,10 +17,12 @@
 */
 
 import { Message } from "@vencord/discord-types";
-import { Parser, useEffect, useState } from "@webpack/common";
+import { MessageFlags } from "@vencord/discord-types/enums";
+import { ChannelStore, ComponentDispatch, FluxDispatcher, MessageTypeSets, Parser, showToast, useEffect, useState } from "@webpack/common";
 
+import { settings } from "./settings";
 import { TranslateIcon } from "./TranslateIcon";
-import { cl, TranslationValue } from "./utils";
+import { cl, findTargetLanguage, TranslationValue } from "./utils";
 
 type TranslationState =
     | { status: "loading"; }
@@ -32,6 +34,9 @@ interface TranslationSetter {
 }
 
 const TranslationSetters = new Set<TranslationSetter>();
+
+// replied message id -> language the reply to it gets translated to
+export const ReplyLanguages = new Map<string, string>();
 
 function updateTranslationState(messageId: string, state?: TranslationState) {
     for (const setter of TranslationSetters) {
@@ -66,6 +71,40 @@ function Dismiss({ onDismiss }: { onDismiss: () => void; }) {
     );
 }
 
+function ReplyInLanguage({ message, languageCode }: { message: Message; languageCode: string; }) {
+    // service is subscribed so the link re-maps when the language list changes
+    settings.use(["service"]);
+
+    const target = findTargetLanguage(languageCode);
+    if (!target || !MessageTypeSets.REPLYABLE.has(message.type) || message.hasFlag(MessageFlags.EPHEMERAL)) return null;
+
+    const [value, label] = target;
+
+    return (
+        <>
+            {" - "}
+            <button
+                onClick={() => {
+                    const channel = ChannelStore.getChannel(message.channel_id);
+                    FluxDispatcher.dispatch({
+                        type: "CREATE_PENDING_REPLY",
+                        channel,
+                        message,
+                        shouldMention: true,
+                        showMentionToggle: channel.guild_id !== null,
+                        _vcTranslateTo: value
+                    });
+                    ComponentDispatch.dispatchToLastSubscribed("TEXTAREA_FOCUS");
+                    showToast({ text: `Your reply will be translated to ${label}`, variant: "success" });
+                }}
+                className={cl("reply-in-language")}
+            >
+                Reply in {label}
+            </button>
+        </>
+    );
+}
+
 export function TranslationAccessory({ message }: { message: Message; }) {
     const [state, setState] = useState<TranslationState>();
 
@@ -93,14 +132,17 @@ export function TranslationAccessory({ message }: { message: Message; }) {
         );
     }
 
-    const { text, sourceLanguage } = state.translation;
+    const { text, sourceLanguage, sourceLanguageCode } = state.translation;
 
     return (
         <span className={cl("accessory")}>
             <TranslateIcon width={16} height={16} className={cl("accessory-icon")} />
             {Parser.parse(text)}
             <br />
-            (translated from {sourceLanguage} - <Dismiss onDismiss={() => setState(undefined)} />)
+            (translated from {sourceLanguage}
+            <ReplyInLanguage message={message} languageCode={sourceLanguageCode} />
+            {" - "}
+            <Dismiss onDismiss={() => setState(undefined)} />)
         </span>
     );
 }
