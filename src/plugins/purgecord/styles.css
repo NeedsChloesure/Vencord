@@ -1,0 +1,259 @@
+.vc-purgecord-button {
+    color: var(--interactive-icon-default, var(--interactive-normal));
+}
+
+/* Panel layout */
+
+.vc-purgecord-layout {
+    display: flex;
+    gap: 16px;
+    height: min(62vh, 520px);
+    margin-top: 8px;
+    text-align: left;
+}
+
+.vc-purgecord-form {
+    flex: 0 0 330px;
+    min-width: 0;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.vc-purgecord-output {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+/* Fields */
+
+.vc-purgecord-form .vc-divider {
+    margin: 12px 0;
+}
+
+
+.vc-purgecord-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.vc-purgecord-row-label {
+    flex: 0 0 104px;
+    color: var(--text-default, var(--text-normal));
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.vc-purgecord-row-body {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.vc-purgecord-input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    padding: 7px 9px;
+    border: 1px solid var(--border-subtle, var(--background-modifier-accent));
+    border-radius: 4px;
+    background-color: var(--input-background-default, var(--background-secondary-alt));
+    color: var(--text-default, var(--text-normal));
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 120ms ease;
+}
+
+.vc-purgecord-input:focus {
+    border-color: var(--brand-500, #5865f2);
+}
+
+.vc-purgecord-input::placeholder {
+    color: var(--text-muted, var(--text-tertiary));
+}
+
+.vc-purgecord-input.vc-purgecord-file {
+    padding: 4px;
+    font-size: 11px;
+}
+
+.vc-purgecord-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0;
+    color: var(--text-default, var(--text-normal));
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.vc-purgecord-slider {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.vc-purgecord-slider input[type="range"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    accent-color: var(--brand-500, #5865f2);
+}
+
+.vc-purgecord-slider-value {
+    flex: 0 0 56px;
+    color: var(--text-muted, var(--text-tertiary));
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.vc-purgecord-hint {
+    margin: 4px 0 0;
+    color: var(--text-muted, var(--text-tertiary));
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+/* Output */
+
+.vc-purgecord-output-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.vc-purgecord-output-bar .vc-purgecord-toggle {
+    margin: 0;
+}
+
+.vc-purgecord-progress {
+    flex: 1 1 auto;
+    height: 6px;
+    min-width: 80px;
+    accent-color: var(--brand-500, #5865f2);
+}
+
+.vc-purgecord-status {
+    flex: 1 1 100%;
+    color: var(--text-muted, var(--text-tertiary));
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+
+.vc-purgecord-log {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background-color: var(--background-base-lowest, var(--background-secondary-alt));
+    font-family: Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 11.5px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    user-select: text;
+}
+
+.vc-purgecord-log-line {
+    color: var(--text-default, var(--text-normal));
+}
+
+.vc-purgecord-log-line.vc-purgecord-success {
+    color: var(--text-positive, #2dc770);
+}
+
+.vc-purgecord-log-line.vc-purgecord-warn {
+    color: var(--text-warning, #f0b232);
+}
+
+.vc-purgecord-log-line.vc-purgecord-error {
+    color: var(--text-danger, #f23f43);
+}
+
+.vc-purgecord-log-line.vc-purgecord-verb {
+    color: var(--text-muted, var(--text-tertiary));
+}
+
+.vc-purgecord-log-line.vc-purgecord-debug {
+    color: var(--interactive-icon-default, var(--interactive-normal));
+}
+
+.vc-purgecord-log-secret {
+    margin-left: 6px;
+    color: var(--text-muted, var(--text-tertiary));
+    font-style: italic;
+}
+
+/* Confirmation preview */
+
+.vc-purgecord-confirm-summary {
+    white-space: pre-wrap;
+    margin-bottom: 12px;
+}
+
+.vc-purgecord-confirm-preview {
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background-color: var(--background-base-lowest, var(--background-secondary-alt));
+    font-family: Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 11.5px;
+    line-height: 1.45;
+    user-select: text;
+}
+
+.vc-purgecord-confirm-preview-line {
+    overflow-wrap: anywhere;
+}
+
+.vc-purgecord-confirm-preview-line.vc-purgecord-muted {
+    color: var(--text-muted, var(--text-tertiary));
+}
+
+/* Message picker */
+
+body.vc-purgecord-picking [data-list-id="chat-messages"] {
+    background-color: var(--background-secondary-alt);
+    box-shadow: inset 0 0 0 2px var(--brand-500, #5865f2);
+}
+
+body.vc-purgecord-picking [id^="chat-messages-"] {
+    position: relative;
+}
+
+body.vc-purgecord-picking [id^="chat-messages-"]:hover {
+    cursor: pointer;
+    background: var(--background-message-hover, var(--background-modifier-hover));
+}
+
+body.vc-purgecord-picking [id^="chat-messages-"]:hover::after {
+    content: "Select this message";
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    z-index: 2;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: var(--control-secondary-background-default, var(--button-secondary-background));
+    color: var(--text-subtle, var(--header-secondary));
+    font-size: 11px;
+    font-weight: 600;
+}
+
+body.vc-purgecord-picking-before [id^="chat-messages-"]:hover::after {
+    content: "Delete before this";
+}
+
+body.vc-purgecord-picking-after [id^="chat-messages-"]:hover::after {
+    content: "Delete after this";
+}
