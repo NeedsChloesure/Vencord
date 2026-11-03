@@ -105,8 +105,9 @@ server side lives in `whisper-worker/src/index.ts`, so changes there usually bel
 ### TextReact (new plugin)
 
 `src/plugins/textReact/` reacts to a message with text: letters become regional indicator emojis,
-digits become keycaps, spaces use a configurable spacer emoji, and punctuation maps to its emoji
-(`?!` → ⁉️, `!!` → ‼️, a repeated `?` or `!` uses the grey variant). Reachable from the message context
+digits become keycaps, symbols that exist as an emoji map to it (`+` → ➕, `-` → ➖, `$` → 💲),
+spaces use a configurable spacer emoji, and punctuation maps to its emoji (`?!` → ⁉️, `!!` → ‼️, a
+repeated `?` or `!` uses the grey variant). Reachable from the message context
 menu, or by holding a modifier and clicking the hover toolbar's Add Reaction button (the click is
 claimed in the capture phase so the emoji picker never opens).
 

@@ -62,11 +62,23 @@ const PUNCTUATION_VARIANTS: Record<"?" | "!", readonly string[]> = {
 const INTERROBANG = "⁉️";
 const BANGBANG = "‼️";
 
+/** Symbols that have an emoji of their own, so a lone "+", "-" or "$" is not thrown away */
+const SYMBOL_EMOJI: Record<string, string> = {
+    "+": "➕",
+    "-": "➖",
+    "$": "💲",
+    "#": "#\uFE0F\u20E3",
+    "*": "*\uFE0F\u20E3",
+    "©": "©\uFE0F",
+    "®": "®\uFE0F",
+    "™": "™\uFE0F"
+};
+
 /**
  * Turns text into a list of reactions. Letters become regional indicators, digits keycaps,
- * spaces the configured word spacer and punctuation its emoji. Discord only allows one reaction
- * of each emoji, so anything already added is skipped; a repeated "?" or "!" uses its grey
- * variant instead, and only a third one is dropped.
+ * symbols that exist as an emoji that emoji, spaces the configured word spacer and punctuation
+ * its emoji. Discord only allows one reaction of each emoji, so anything already added is skipped;
+ * a repeated "?" or "!" uses its grey variant instead, and only a third one is dropped.
  */
 function getReactions(text: string) {
     const reactions: string[] = [];
@@ -106,6 +118,8 @@ function getReactions(text: string) {
             for (let extra = 0; extra < runLength - 2; extra++) addPunctuation("!");
         } else if (char === "?" || char === "!") {
             addPunctuation(char);
+        } else if (char in SYMBOL_EMOJI) {
+            add(SYMBOL_EMOJI[char]);
         } else if (char === " ") {
             const spacer = settings.store.wordSpacer.trim();
             if (spacer) add(spacer);
@@ -118,7 +132,7 @@ function getReactions(text: string) {
 async function reactWithText(message: ReactionTarget, text: string) {
     const reactions = getReactions(text);
     if (!reactions.length) {
-        showToast({ text: "Nothing to react with! Only letters, digits, punctuation and spaces are supported.", variant: "critical" });
+        showToast({ text: "Nothing to react with! Only letters, digits, symbols, punctuation and spaces are supported.", variant: "critical" });
         return;
     }
 
@@ -166,7 +180,7 @@ function TextReactModal({ message, modalProps }: { message: ReactionTarget; moda
             }]}
         >
             <Paragraph>
-                Letters are turned into regional indicator emojis, digits into keycaps, punctuation into its emoji and spaces into your word spacer. A repeated question or exclamation mark uses its grey variant.
+                Letters are turned into regional indicator emojis, digits into keycaps, symbols like + and - into their emoji, punctuation into its emoji and spaces into your word spacer. A repeated question or exclamation mark uses its grey variant.
             </Paragraph>
 
             {/* Not Discord's TextInput: its className replaces the input's own styling classes,

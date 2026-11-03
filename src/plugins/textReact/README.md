@@ -9,6 +9,8 @@ React to a message with text instead of adding regional indicator emojis one by 
 
 Type what you want to say, check the preview and hit **Add Reactions**. Every letter is turned into its regional indicator emoji, so `hi there` becomes `🇭🇮 ⬜ 🇹🇭🇪🇷🇪`. Punctuation gets its emoji too: `Why?!` becomes `🇼🇭🇾 ⁉️`, `Why!!` becomes `🇼🇭🇾 ‼️` and `Why??` becomes `🇼🇭🇾 ❓ ❔`.
 
+Symbols that exist as an emoji are mapped as well, so `+1` becomes ➕ 1️⃣ and `$5` becomes 💲 5️⃣. A symbol always uses that one emoji, so like letters it only appears once per message.
+
 ## What maps to what
 
 | Input | Reaction |
@@ -20,6 +22,10 @@ Type what you want to say, check the preview and hit **Add Reactions**. Every le
 | `?!` / `!?` | ⁉️ |
 | `!!` | ‼️ |
 | `!!!` and longer | ‼️, then ❗ and ❕ |
+| `+` / `-` | ➕ / ➖ |
+| `$` | 💲 |
+| `#` / `*` | #️⃣ / *️⃣ |
+| `©` / `®` / `™` | ©️ / ®️ / ™️ |
 | space | Your configured word spacer (default ⬜) |
 | anything else | Ignored |
 
@@ -32,7 +38,7 @@ Repeats escalate instead of being thrown away, so `Why? Why! Why? Why!` becomes 
 
 ## Limitations
 
-- Discord does not allow the same reaction twice on one message, so repeated letters collapse: `hello` reacts with 🇭🇪🇱🇴. Repeated `?` and `!` get one extra chance as their grey variant, and anything past that is dropped (a third `?`, or the second `?!`). The preview in the dialog always shows exactly what will be added.
+- Discord does not allow the same reaction twice on one message, so repeats collapse: `hello` reacts with 🇭🇪🇱🇴, and `1-2-3` with 1️⃣ ➖ 2️⃣ 3️⃣. Repeated `?` and `!` get one extra chance as their grey variant, and anything past that is dropped (a third `?`, or the second `?!`). The preview in the dialog always shows exactly what will be added.
 - Discord allows at most 20 distinct reactions per message. If your text is longer than that, only the first 20 are added and you get a warning toast.
 - Reactions are added one at a time, ~120-210 ms apart, so a long word does not trip Discord's reaction rate limit. A full 20 characters takes a couple of seconds to appear.
 - The modifier click is matched against Discord's hover toolbar markup (a dialog popout button inside the message utilities toolbar), not a minified component patch. If Discord reshuffles that markup, the shortcut stops triggering instead of breaking anything; right click → React with Text always works. Enable Vencord's debug logging to see what the plugin found on a modifier click.
