@@ -49,33 +49,73 @@ const settings = definePluginSettings({
     }
 });
 
+/** Both a coloured and a grey variant exist, so a repeated character falls back to the grey one */
+const PUNCTUATION_VARIANTS: Record<"?" | "!", readonly string[]> = {
+    "?": ["❓", "❔"],
+    "!": ["❗", "❕"]
+};
+
+/** Combinations that have an emoji of their own */
+const INTERROBANG = "⁉️";
+const BANGBANG = "‼️";
+
 /**
- * Turns text into a list of reactions. Letters become regional indicators, digits become
- * keycaps and spaces become the configured word spacer. Everything else is ignored.
+ * Turns text into a list of reactions. Letters become regional indicators, digits keycaps,
+ * spaces the configured word spacer and punctuation its emoji. Discord only allows one reaction
+ * of each emoji, so anything already added is skipped; a repeated "?" or "!" uses its grey
+ * variant instead, and only a third one is dropped.
  */
 function getReactions(text: string) {
     const reactions: string[] = [];
+    const added = new Set<string>();
+    const punctuationSeen: Record<"?" | "!", number> = { "?": 0, "!": 0 };
 
-    for (const char of text.toLowerCase()) {
+    function add(emoji: string | undefined) {
+        if (!emoji || added.has(emoji)) return;
+        added.add(emoji);
+        reactions.push(emoji);
+    }
+
+    function addPunctuation(char: "?" | "!") {
+        add(PUNCTUATION_VARIANTS[char][punctuationSeen[char]++]);
+    }
+
+    const chars = [...text.toLowerCase()];
+
+    for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        const next = chars[i + 1];
+
         if (char >= "a" && char <= "z") {
-            reactions.push(String.fromCodePoint(REGIONAL_INDICATOR_A + char.charCodeAt(0) - 97));
+            add(String.fromCodePoint(REGIONAL_INDICATOR_A + char.charCodeAt(0) - 97));
         } else if (char >= "0" && char <= "9") {
-            reactions.push(`${char}\uFE0F\u20E3`);
+            add(`${char}\uFE0F\u20E3`);
+        } else if ((char === "?" && next === "!") || (char === "!" && next === "?")) {
+            add(INTERROBANG);
+            i++;
+        } else if (char === "!" && next === "!") {
+            // A run of bangs is one bangbang; anything past the second escalates like a single "!"
+            let runLength = 1;
+            while (chars[i + runLength] === "!") runLength++;
+
+            add(BANGBANG);
+            i += runLength - 1;
+            for (let extra = 0; extra < runLength - 2; extra++) addPunctuation("!");
+        } else if (char === "?" || char === "!") {
+            addPunctuation(char);
         } else if (char === " ") {
             const spacer = settings.store.wordSpacer.trim();
-            if (spacer) reactions.push(spacer);
+            if (spacer) add(spacer);
         }
     }
 
-    // Discord only allows a single reaction of each emoji per message, so duplicates would be no-ops.
-    // Set preserves the insertion order, so the text stays readable.
-    return [...new Set(reactions)];
+    return reactions;
 }
 
 async function reactWithText(message: ReactionTarget, text: string) {
     const reactions = getReactions(text);
     if (!reactions.length) {
-        showToast({ text: "Nothing to react with! Only letters, digits and spaces are supported.", variant: "critical" });
+        showToast({ text: "Nothing to react with! Only letters, digits, punctuation and spaces are supported.", variant: "critical" });
         return;
     }
 
@@ -123,7 +163,7 @@ function TextReactModal({ message, modalProps }: { message: ReactionTarget; moda
             }]}
         >
             <Forms.FormText>
-                Letters are turned into regional indicator emojis, digits into keycaps and spaces into your word spacer.
+                Letters are turned into regional indicator emojis, digits into keycaps, punctuation into its emoji and spaces into your word spacer. A repeated question or exclamation mark uses its grey variant.
             </Forms.FormText>
 
             {/* Not Discord's TextInput: its className replaces the input's own styling classes,
