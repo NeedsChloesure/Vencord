@@ -660,7 +660,7 @@ export const Devs = /* #__PURE__*/ Object.freeze({
     },
     jax: {
         name: "jax",
-        id: 1493703027801194598n
+        id: 1409995768395464754n
     },
     yuna0x0: {
         name: "yuna0x0",
@@ -686,16 +686,20 @@ export const Devs = /* #__PURE__*/ Object.freeze({
         name: "f3tch",
         id: 1016388460929626174n
     },
-    // Fork-local entry used by the VoiceTranscriber plugin.
+    // Fork-local entry used by the fork's own plugins.
     // Replace the name and ID with your own, or keep `id: 0n` + `badge: false` to stay anonymous.
     localAuthor: {
-        name: "you",
+        name: "Chloe",
         id: 0n,
         badge: false
     },
     pattersonuwu: {
         name: "patty",
-        id: 843230753734918154n,
+        id: 843230753734918154n
+    },
+    kaxtusik: {
+        name: "kaxtusik",
+        id: 549599621056561152n
     },
     Kaerion: {
         name: "Kaerion",
@@ -704,6 +708,14 @@ export const Devs = /* #__PURE__*/ Object.freeze({
     imnotplayinginreallife: {
         name: "I'm not playing in real life",
         id: 841939724306087986n
+    },
+    Nays: {
+        name: "Nays",
+        id: 344871509677965313n
+    },
+    NiNoX: {
+        name: "NiNoX",
+        id: 123435354958200833n
     }
 } satisfies Record<string, Dev>);
 

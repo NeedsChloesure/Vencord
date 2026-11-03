@@ -6,7 +6,7 @@ branch and is not intended for upstream.
 
 ## Working in this repo
 
-- **Package manager is pnpm** (`pnpm@11.9.0`, see `packageManager` in `package.json`). Don't
+- **Package manager is pnpm** (`pnpm@12.15.0`, see `packageManager` in `package.json`). Don't
   `bun install` — it would rewrite `pnpm-lock.yaml`.
 - **Checks:** `pnpm test` runs `buildStandalone`, `testTsc`, `lint`, `lint-styles` and
   `generatePluginJson`. During development the individual pieces are faster:
@@ -105,7 +105,8 @@ server side lives in `whisper-worker/src/index.ts`, so changes there usually bel
 ### TextReact (new plugin)
 
 `src/plugins/textReact/` reacts to a message with text: letters become regional indicator emojis,
-digits become keycaps, spaces use a configurable spacer emoji. Reachable from the message context
+digits become keycaps, spaces use a configurable spacer emoji, and punctuation maps to its emoji
+(`?!` → ⁉️, `!!` → ‼️, a repeated `?` or `!` uses the grey variant). Reachable from the message context
 menu, or by holding a modifier and clicking the hover toolbar's Add Reaction button (the click is
 claimed in the capture phase so the emoji picker never opens).
 
@@ -114,3 +115,28 @@ claimed in the capture phase so the emoji picker never opens).
 Ported from the `r/feat/pronouns-caching` branch: pronoun lookups are cached in IndexedDB through
 `@api/DataStore` (`pronounsCache.ts`) instead of being fetched again for every render, with a
 **Clear cache** button and a `cacheExpiration` setting in `settings.tsx`.
+
+## Upstream guide
+
+Vencord's own guide applies on top of the above:
+
+- Write clean, simple code:
+  - Only add abstractions when they provide clear value. Don't future-proof prematurely
+  - Only handle cases that are relevant. Don't over-engineer for hypothetical edge-cases
+- Before adding common logic, search the codebase (especially the utils folder) for existing implementations that can be reused. If one exists but isn't exported, extract it into a util.
+- Don't add comments unless they provide valuable context or explanation that isn't immediately clear. Use single line style comments.
+- Only add jsdoc to common API, never to private functions. Always add in api & utils, never in plugins
+- Always prefer functions or plain objects over classes
+- Always build with `--dev`: `pnpm build --dev`
+
+Deeper instructions:
+
+- [Live Discord Sessions](.skills/discord-session.md) - Run chrome for live testing & reverse engineering
+- [Authoring Plugins](.skills/authoring-plugins.md) - Write and manage plugins
+
+## Issue and PR Guidelines
+
+AI contributions require human oversight and review.
+
+- Never create an issue.
+- Never create a PR.

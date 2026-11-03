@@ -7,8 +7,10 @@
 import "./styles.css";
 
 import { findGroupChildrenByChildId, NavContextMenuPatchCallback } from "@api/ContextMenu";
+import { isPluginEnabled } from "@api/PluginManager";
 import { definePluginSettings } from "@api/Settings";
 import { CopyIcon, Microphone } from "@components/Icons";
+import TranslatePlugin from "@plugins/translate";
 import { Devs } from "@utils/constants";
 import { classNameFactory } from "@utils/css";
 import { copyWithToast } from "@utils/discord";
@@ -61,7 +63,12 @@ interface Transcript {
     status: "loading" | "done" | "error";
     text?: string;
     error?: string;
+    /** Only set once the user asked the Translate plugin for a translation of the text */
+    translation?: { status: "loading"; } | { status: "done"; value: Translation; };
 }
+
+/** The shape the Translate plugin hands back, without importing its types across plugin folders */
+type Translation = Awaited<ReturnType<typeof TranslatePlugin.translate>>;
 
 /** Transcripts are kept per message so they survive re-renders and scrolling. */
 const transcripts = new Map<string, Transcript>();
@@ -84,6 +91,22 @@ function useTranscript(messageId: string) {
     }, []);
 
     return transcripts.get(messageId);
+}
+
+function setTranslation(messageId: string, translation?: Transcript["translation"]) {
+    const transcript = transcripts.get(messageId);
+    if (transcript) updateTranscript(messageId, { ...transcript, translation });
+}
+
+async function translateTranscript(messageId: string, text: string) {
+    setTranslation(messageId, { status: "loading" });
+
+    try {
+        setTranslation(messageId, { status: "done", value: await TranslatePlugin.translate("received", text) });
+    } catch {
+        // translate() already showed the failure in a toast
+        setTranslation(messageId);
+    }
 }
 
 function isAudioAttachment(attachment: MessageAttachment) {
@@ -184,11 +207,31 @@ function TranscriptionAccessory({ message }: { message: Message; }) {
     }
 
     if (transcript?.status === "done") {
+        const { translation } = transcript;
+
         return (
             <div className={cl("accessory")}>
                 <Microphone width={16} height={16} className={cl("icon")} />
                 <span className={cl("text")}>{transcript.text}</span>
+                {translation?.status === "loading" && <span className={cl("status")}>Translating...</span>}
+                {translation?.status === "done" && (
+                    <>
+                        <span className={cl("text")}>{translation.value.text}</span>
+                        <span className={cl("status")}>(translated from {translation.value.sourceLanguage})</span>
+                    </>
+                )}
                 <span className={cl("actions")}>
+                    {isPluginEnabled(TranslatePlugin.name) && (
+                        <button
+                            className={cl("button")}
+                            onClick={() => {
+                                if (translation) setTranslation(message.id);
+                                else void translateTranscript(message.id, transcript.text!);
+                            }}
+                        >
+                            {translation ? "Hide translation" : "Translate"}
+                        </button>
+                    )}
                     <button className={cl("button")} onClick={() => copyWithToast(transcript.text!, "Transcription copied!")}>
                         <CopyIcon width={14} height={14} /> Copy
                     </button>

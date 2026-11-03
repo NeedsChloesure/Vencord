@@ -13,6 +13,7 @@ import "./styles.css";
 
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Paragraph } from "@components/Paragraph";
+import { Devs } from "@utils/constants";
 import { classNameFactory } from "@utils/css";
 import definePlugin, { IconComponent } from "@utils/types";
 import type { Channel } from "@vencord/discord-types";
@@ -45,7 +46,7 @@ export default definePlugin({
     name: "Purgecord",
     description: "Bulk delete your own messages in a channel, DM or whole server",
     tags: ["Chat", "Utility"],
-    authors: [{ name: "Chloe", id: 0n }],
+    authors: [Devs.localAuthor],
     settings,
 
     patches: [{

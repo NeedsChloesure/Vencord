@@ -8,13 +8,16 @@ import "./styles.css";
 
 import { findGroupChildrenByChildId, NavContextMenuPatchCallback } from "@api/ContextMenu";
 import { definePluginSettings } from "@api/Settings";
+import { Heading } from "@components/Heading";
+import { Paragraph } from "@components/Paragraph";
+import { Devs } from "@utils/constants";
 import { classNameFactory } from "@utils/css";
 import { Logger } from "@utils/Logger";
 import { Margins } from "@utils/margins";
 import { sleep } from "@utils/misc";
 import definePlugin, { IconComponent, OptionType } from "@utils/types";
 import { Message, RenderModalProps } from "@vencord/discord-types";
-import { Forms, Menu, MessageStore, Modal, openModal, RestAPI, showToast, useState } from "@webpack/common";
+import { Menu, MessageStore, Modal, openModal, RestAPI, showToast, useState } from "@webpack/common";
 
 const cl = classNameFactory("vc-text-react-");
 const logger = new Logger("TextReact");
@@ -162,9 +165,9 @@ function TextReactModal({ message, modalProps }: { message: ReactionTarget; moda
                 }
             }]}
         >
-            <Forms.FormText>
+            <Paragraph>
                 Letters are turned into regional indicator emojis, digits into keycaps, punctuation into its emoji and spaces into your word spacer. A repeated question or exclamation mark uses its grey variant.
-            </Forms.FormText>
+            </Paragraph>
 
             {/* Not Discord's TextInput: its className replaces the input's own styling classes,
                 which leaves a bare native input behind. This field is styled entirely by us. */}
@@ -181,18 +184,18 @@ function TextReactModal({ message, modalProps }: { message: ReactionTarget; moda
                 />
             </div>
 
-            <Forms.FormTitle className={Margins.top16}>Preview</Forms.FormTitle>
+            <Heading tag="h5" className={Margins.top16}>Preview</Heading>
             <div className={cl("preview")}>
                 {willAdd.length
                     ? willAdd.map((emoji, i) => <span key={i} className={cl("reaction")}>{emoji}</span>)
-                    : <Forms.FormText>Nothing to preview yet</Forms.FormText>
+                    : <Paragraph>Nothing to preview yet</Paragraph>
                 }
             </div>
 
             {reactions.length > MAX_REACTIONS && (
-                <Forms.FormText className={cl("hint")}>
+                <Paragraph className={cl("hint")}>
                     Only the first {MAX_REACTIONS} reactions will be added.
-                </Forms.FormText>
+                </Paragraph>
             )}
         </Modal>
     );
@@ -334,7 +337,7 @@ export default definePlugin({
     name: "TextReact",
     description: "React to messages with text by turning it into regional indicator emojis",
     tags: ["Chat", "Emotes", "Reactions"],
-    authors: [{ name: "Chloe", id: 0n }],
+    authors: [Devs.localAuthor],
     settings,
     contextMenus: {
         "message": messageContextMenuPatch
