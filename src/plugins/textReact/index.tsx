@@ -27,8 +27,8 @@ const MAX_REACTIONS = 20;
 const REGIONAL_INDICATOR_A = 0x1F1E6;
 
 /** Spacing between reaction requests, plus a random extra bit so bursts do not line up */
-const REACTION_DELAY_MS = 120;
-const REACTION_JITTER_MS = 90;
+const REACTION_DELAY_MS = 220;
+const REACTION_JITTER_MS = 120;
 
 /** The minimum amount of message data needed to add reactions to it */
 type ReactionTarget = Pick<Message, "channel_id" | "id">;

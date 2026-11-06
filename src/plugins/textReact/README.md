@@ -40,5 +40,5 @@ Repeats escalate instead of being thrown away, so `Why? Why! Why? Why!` becomes 
 
 - Discord does not allow the same reaction twice on one message, so repeats collapse: `hello` reacts with 🇭🇪🇱🇴, and `1-2-3` with 1️⃣ ➖ 2️⃣ 3️⃣. Repeated `?` and `!` get one extra chance as their grey variant, and anything past that is dropped (a third `?`, or the second `?!`). The preview in the dialog always shows exactly what will be added.
 - Discord allows at most 20 distinct reactions per message. If your text is longer than that, only the first 20 are added and you get a warning toast.
-- Reactions are added one at a time, ~120-210 ms apart, so a long word does not trip Discord's reaction rate limit. A full 20 characters takes a couple of seconds to appear.
+- Reactions are added one at a time, ~220-340 ms apart, so a long word does not trip Discord's reaction rate limit. A full 20 characters takes a few seconds to appear.
 - The modifier click is matched against Discord's hover toolbar markup (a dialog popout button inside the message utilities toolbar), not a minified component patch. If Discord reshuffles that markup, the shortcut stops triggering instead of breaking anything; right click → React with Text always works. Enable Vencord's debug logging to see what the plugin found on a modifier click.
