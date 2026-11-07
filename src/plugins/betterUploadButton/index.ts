@@ -22,7 +22,7 @@ import definePlugin from "@utils/types";
 export default definePlugin({
     name: "BetterUploadButton",
     authors: [Devs.fawn, Devs.Ven],
-    description: "Upload with a single click, open menu with right click",
+    description: "Upload with a single click, open menu with right click or a modifier click",
     tags: ["Utility", "Shortcuts"],
     patches: [
         {
@@ -40,7 +40,7 @@ export default definePlugin({
         if (!props?.className?.includes("attachButton")) return {};
 
         return {
-            onClick: onDoubleClick,
+            onClick: (e: React.MouseEvent) => (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey ? onClick : onDoubleClick)?.(e),
             onContextMenu: onClick
         };
     }

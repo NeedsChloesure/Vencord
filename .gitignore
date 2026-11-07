@@ -21,5 +21,8 @@ lerna-debug.log*
 
 src/userplugins
 
+# Snapshot of Discord's web client, kept for reverse engineering (see discord-bundle/README.md)
+discord-bundle/
+
 ExtensionCache/
 /settings

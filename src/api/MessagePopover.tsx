@@ -53,6 +53,23 @@ export type MessagePopoverButtonData = {
 
 export const MessagePopoverButtonMap = new Map<string, MessagePopoverButtonData>();
 
+type MessagePopoverPolicy = (message: Message) => {
+    allowedButtons: readonly string[];
+    markerClassName?: string;
+} | null;
+
+const messagePopoverPolicies = new Map<string, MessagePopoverPolicy>();
+
+/** Register a policy for filtering buttons and marking particular message toolbars. */
+export function addMessagePopoverPolicy(identifier: string, policy: MessagePopoverPolicy) {
+    messagePopoverPolicies.set(identifier, policy);
+}
+
+/** Remove a previously registered toolbar policy. */
+export function removeMessagePopoverPolicy(identifier: string) {
+    messagePopoverPolicies.delete(identifier);
+}
+
 /**
  * The icon argument is used only for Settings UI. Your render function must still return an icon,
  * and it can be different from this one.
@@ -74,8 +91,19 @@ function VencordPopoverButtons(props: { Component: React.ComponentType<MessagePo
 
     const { messagePopoverButtons } = useSettings(["uiElements.messagePopoverButtons.*"]).uiElements;
 
+    const policies = Array.from(messagePopoverPolicies.entries()).flatMap(([key, policy]) => {
+        try {
+            const result = policy(message);
+            return result ? [result] : [];
+        } catch (err) {
+            logger.error(`[${key}]`, err);
+            return [];
+        }
+    });
+
     const elements = Array.from(MessagePopoverButtonMap.entries())
         .filter(([key]) => messagePopoverButtons[key]?.enabled !== false)
+        .filter(([key]) => policies.every(policy => policy.allowedButtons.includes(key)))
         .map(([key, { render }]) => {
             try {
                 // FIXME: this should use proper React to ensure hooks work
@@ -93,7 +121,7 @@ function VencordPopoverButtons(props: { Component: React.ComponentType<MessagePo
             }
         });
 
-    return <>{elements}</>;
+    return <>{policies.map((policy, i) => policy.markerClassName && <span key={i} className={policy.markerClassName} hidden />)}{elements}</>;
 }
 
 export function _buildPopoverElements(

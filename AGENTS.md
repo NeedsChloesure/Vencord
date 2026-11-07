@@ -111,6 +111,43 @@ repeated `?` or `!` uses the grey variant). Reachable from the message context
 menu, or by holding a modifier and clicking the hover toolbar's Add Reaction button (the click is
 claimed in the capture phase so the emoji picker never opens).
 
+### ScheduledMessages (new plugin)
+
+`src/plugins/scheduledMessages/` is a view on top of Discord's own scheduled messages. Scheduling,
+storage and delivery are Discord's (`/users/@me/scheduled-messages`): the server sends the message on
+time even if the client is closed. Scheduling stays Discord's own (the attach menu's schedule entry
+point); since Discord only lists schedules in its inbox, the plugin adds an inline "only you" row per
+pending message with **Send now**, **Edit message**, **Change time** and **Cancel**.
+
+| File | Role |
+| --- | --- |
+| `index.tsx` | Plugin definition, hover-bar buttons, text-edit modal and the always-visible time line. |
+| `native.ts` | Discord's `scheduledMessageStore`, the minified REST module, and the native scheduling dialogs. |
+| `store.ts` | Injects/removes the inline rows from the native store, plus the update/cancel/send-now wrappers. |
+| `time.ts` | The "today at ..." / "in 2 hours" formatting for the row. |
+
+Things worth knowing:
+
+- **Scheduling, storage and delivery belong to Discord.** Create schedules through Discord's attach
+  menu. **Change time** opens Discord's native edit-time dialog; **Edit message** opens the plugin's
+  text-edit modal and saves through Discord's scheduled-message update action. The editor preserves
+  silent messages by showing their `@silent` prefix.
+- The actions module's exports are minified, so `native.ts` finds it with `mapMangledModuleLazy` and
+  its log strings (`"Failed to update scheduled message"`, ...). The store is found by
+  `getScheduledMessagesForInbox` and the edit-time dialog by `id:"custom-time"`. A failed store read
+  is logged and does not remove existing rows as if there were no schedules.
+- Pending rows are **local messages, not stored data**: `store.ts` deletes and recreates them
+  whenever the native list, the selected channel or a sweep notices a change, so never rely on a
+  row's message id surviving. The sweep only prunes rows whose send time has passed; the server is
+  what actually sends.
+- All four actions are registered in `start()` through the message popover API and removed in
+  `stop()`. A toolbar policy filters out other plugins' buttons on these local rows and adds a marker
+  used to hide Discord's More button. The plugin depends explicitly on `MessagePopoverAPI`.
+- The scheduled time is a separate, always-visible accessory line below the message, not part of
+  the hover bar.
+- The rows only exist for the selected channel; `CHANNEL_SELECT` rebuilds them and
+  `CONNECTION_OPEN` refetches the list, because Discord clears its store on reconnect.
+
 ### UserMessagesPronouns (modified)
 
 Ported from the `r/feat/pronouns-caching` branch: pronoun lookups are cached in IndexedDB through

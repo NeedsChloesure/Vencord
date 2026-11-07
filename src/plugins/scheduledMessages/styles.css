@@ -1,0 +1,12 @@
+/* The time stays below the message and is always visible, even without hovering */
+.vc-scheduled-time {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    white-space: nowrap;
+    color: var(--text-muted, var(--text-tertiary));
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
