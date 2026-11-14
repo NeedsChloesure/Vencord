@@ -103,7 +103,7 @@ export default definePlugin({
                 return <>{prefix}{nick}</>;
 
             if (mode === "user-nick")
-                return <>{prefix}{username} <span className="vc-smyn-suffix">{nick}</span></>;
+                return <>{prefix}<span className="vc-smyn-username" data-text={username}>{username}</span> <span className="vc-smyn-suffix">{nick}</span></>;
 
             if (mode === "nick-user")
                 return <>{prefix}{nick} <span className="vc-smyn-suffix">{username}</span></>;
@@ -111,7 +111,7 @@ export default definePlugin({
             if (mode === "nick")
                 return <>{prefix}{nick}</>;
 
-            return <>{prefix}{username}</>;
+            return <>{prefix}<span className="vc-smyn-username" data-text={username}>{username}</span></>;
         } catch {
             return <>{author?.nick}</>;
         }

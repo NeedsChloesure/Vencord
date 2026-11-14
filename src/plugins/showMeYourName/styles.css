@@ -11,3 +11,52 @@
 .vc-smyn-suffix::after {
     content: ")";
 }
+
+/* The name's gradient is painted through the glyphs of the whole name element, so the nickname would
+   take its colours. It keeps its own fill, and the glow is drawn here over the username instead. */
+.vc-smyn-username {
+    isolation: isolate;
+    position: relative;
+}
+
+/* Blurred copy of the username in the name's own gradient, mirroring Discord's glow. Without the
+   gradient colours the background is invalid, so names without a gradient paint nothing. */
+.vc-smyn-username::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to right,
+        var(--custom-gradient-color-1),
+        var(--custom-gradient-color-2, var(--custom-gradient-color-1)),
+        var(--custom-gradient-color-1)
+    );
+    background-size: 100px auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: blur(4px);
+    opacity: 0.7;
+    text-indent: 0;
+    z-index: -1;
+}
+
+[style*="--custom-gradient-color-3"] .vc-smyn-username::after {
+    background-image: linear-gradient(
+        to right,
+        var(--custom-gradient-color-1),
+        var(--custom-gradient-color-2),
+        var(--custom-gradient-color-3),
+        var(--custom-gradient-color-1)
+    );
+}
+
+/* Discord's own glow copies the name string the client was given, which is the nickname, so it runs
+   out at the nickname's width. Hide it where the username glow above takes over. */
+:has(.vc-smyn-username) > [class*="usernameGlow"] {
+    display: none;
+}
+
+[data-text]:has(.vc-smyn-username)::after {
+    content: none;
+}
